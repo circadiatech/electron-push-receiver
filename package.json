@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "A module to receive FCM notifications in electron using HTTP v1 API",
   "main": "src/index.js",
-  "repository": "https://github.com/circadiatech/electron-push-receiver",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/circadiatech/electron-push-receiver.git"
+  },
   "author": "Choiman1559",
   "license": "MIT",
   "types": "src/electron-push-receiver.d.ts",
