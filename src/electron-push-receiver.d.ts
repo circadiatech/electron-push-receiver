@@ -5,8 +5,7 @@ interface ElectronPushReceiver {
     NOTIFICATION_SERVICE_ERROR: string;
     NOTIFICATION_RECEIVED: string;
     TOKEN_UPDATED: string;
-    // @ts-ignore
-    setup: (webContents: Electron.WebContents) => void;
+    setup: (webContents: Electron.WebContents, storage: Storage) => void;
 }
 
 declare const electronPushReceiver: ElectronPushReceiver;

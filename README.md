@@ -7,17 +7,17 @@ This specific fork uses [Aracna FCM](https://github.com/queelag/fcm) to support 
 ## Install
 
 ```
-npm i -S @cuj1559/electron-push-receiver
+npm i -S @circadiahealth/electron-push-receiver
 ```
 
-Click [here](https://www.npmjs.com/package/@cuj1559/electron-push-receiver) to check out npm page.
+Click [here](https://www.npmjs.com/package/@circadiahealth/electron-push-receiver) to check out npm page.
 
 ## Usage
 
 - In `main.js` / in main process :
 
 ```javascript
-const { setup: setupPushReceiver } = require('@cuj1559/electron-push-receiver');
+const { setup: setupPushReceiver } = require('@circadiahealth/electron-push-receiver');
 
 // Call it before 'did-finish-load' with mainWindow a reference to your window
 setupPushReceiver(mainWindow.webContents);
@@ -34,7 +34,7 @@ import {
   NOTIFICATION_SERVICE_ERROR,
   NOTIFICATION_RECEIVED as ON_NOTIFICATION_RECEIVED,
   TOKEN_UPDATED,
-} from '@cuj1559/electron-push-receiver/src/constants';
+} from '@circadiahealth/electron-push-receiver/src/constants';
 
 // Listen for service successfully started
 ipcRenderer.on(NOTIFICATION_SERVICE_STARTED, (_, token) => { /* do something */ });

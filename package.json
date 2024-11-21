@@ -1,9 +1,9 @@
 {
-  "name": "@cuj1559/electron-push-receiver",
-  "version": "3.1.8",
+  "name": "@circadiatech/electron-push-receiver",
+  "version": "1.0.0",
   "description": "A module to receive FCM notifications in electron using HTTP v1 API",
   "main": "src/index.js",
-  "repository": "https://github.com/Choiman1559/electron-push-receiver",
+  "repository": "https://github.com/circadiatech/electron-push-receiver",
   "author": "Choiman1559",
   "license": "MIT",
   "types": "src/electron-push-receiver.d.ts",
@@ -22,8 +22,5 @@
     "prettier": "^1.7.4",
     "prettier-eslint": "^8.2.1",
     "prettier-eslint-cli": "^4.4.0"
-  },
-  "peerDepencies": {
-    "electron": "^1.8.1"
   }
 }

@@ -7,7 +7,6 @@ const {
 } = require('@aracna/fcm');
 
 const { ipcMain } = require('electron');
-const Store = require('electron-store');
 
 const {
   START_NOTIFICATION_SERVICE,
@@ -17,9 +16,6 @@ const {
   NOTIFICATION_RECEIVED,
   TOKEN_UPDATED,
 } = require('./constants');
-
-// Static store object that used for save credential cache to local storage
-const config = new Store();
 
 // All the credentials that previously specified by using project
 let credentialConfig;
@@ -49,11 +45,11 @@ module.exports = {
 };
 
 // To be call from the main process
-function setup(webContents) {
+function setup(webContents, storage) {
   // Will be called by the renderer process
   ipcMain.on(START_NOTIFICATION_SERVICE, async (_, appID, projectID, apiKey, vapidKey) => {
     // Retrieve saved credentials
-    let credentials = config.get('credentials');
+    let credentials = storage.get('credentials');
 
     if (started) {
       webContents.send(NOTIFICATION_SERVICE_STARTED, (credentials || {}).token);
@@ -80,7 +76,7 @@ function setup(webContents) {
     };
 
     try {
-      credentials = await initCredential(webContents);
+      credentials = await initCredential(webContents, storage);
       await initClient(webContents, credentials, authSecret, ecdh);
       lastCredential = credentials;
       webContents.send(NOTIFICATION_SERVICE_STARTED, credentials.token);
@@ -90,7 +86,7 @@ function setup(webContents) {
   });
 }
 
-async function initCredential(webContents) {
+async function initCredential(webContents, storage) {
   // Register if no credentials or if senderId has changed
   const issuedCredential = await Promise.all([registerToFCM(credentialConfig)]);
   const registeredCredential = issuedCredential[0];
@@ -98,8 +94,8 @@ async function initCredential(webContents) {
 
   credentialsStringify.acg.id = credentialsStringify.acg.id.toString();
   credentialsStringify.acg.securityToken = credentialsStringify.acg.securityToken.toString();
-  config.set('credentials', credentialsStringify);
-  config.set('appID', credentialConfig.appID);
+  storage.set('credentials', credentialsStringify);
+  storage.set('appID', credentialConfig.appID);
   webContents.send(TOKEN_UPDATED, registeredCredential.token);
 
   registeredCredential.acg.id = BigInt(registeredCredential.acg.id);
