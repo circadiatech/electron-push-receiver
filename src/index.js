@@ -4,9 +4,9 @@ const {
   generateFcmAuthSecret,
   registerToFCM,
   FcmClient,
-} = require('@aracna/fcm');
+} = require("@aracna/fcm");
 
-const { ipcMain } = require('electron');
+const { ipcMain } = require("electron");
 
 const {
   START_NOTIFICATION_SERVICE,
@@ -15,7 +15,7 @@ const {
   NOTIFICATION_SERVICE_ERROR,
   NOTIFICATION_RECEIVED,
   TOKEN_UPDATED,
-} = require('./constants');
+} = require("./constants");
 
 // All the credentials that previously specified by using project
 let credentialConfig;
@@ -47,43 +47,49 @@ module.exports = {
 // To be call from the main process
 function setup(webContents, storage) {
   // Will be called by the renderer process
-  ipcMain.on(START_NOTIFICATION_SERVICE, async (_, appID, projectID, apiKey, vapidKey) => {
-    // Retrieve saved credentials
-    let credentials = storage.get('credentials');
+  ipcMain.on(
+    START_NOTIFICATION_SERVICE,
+    async (_, appID, projectID, apiKey, vapidKey) => {
+      // Retrieve saved credentials
+      let credentials = storage.getItem("credentials");
 
-    if (started) {
-      webContents.send(NOTIFICATION_SERVICE_STARTED, (credentials || {}).token);
-      return;
-    }
-    started = true;
+      if (started) {
+        webContents.send(
+          NOTIFICATION_SERVICE_STARTED,
+          (credentials || {}).token
+        );
+        return;
+      }
+      started = true;
 
-    const authSecret = generateFcmAuthSecret();
-    const ecdh = createFcmECDH();
+      const authSecret = generateFcmAuthSecret();
+      const ecdh = createFcmECDH();
 
-    credentials = null;
-    credentialConfig = {
-      appID,
-      ece: {
-        authSecret,
-        publicKey: ecdh.getPublicKey(),
-      },
-      firebase: {
-        apiKey,
+      credentials = null;
+      credentialConfig = {
         appID,
-        projectID,
-      },
-      vapidKey,
-    };
+        ece: {
+          authSecret,
+          publicKey: ecdh.getPublicKey(),
+        },
+        firebase: {
+          apiKey,
+          appID,
+          projectID,
+        },
+        vapidKey,
+      };
 
-    try {
-      credentials = await initCredential(webContents, storage);
-      await initClient(webContents, credentials, authSecret, ecdh);
-      lastCredential = credentials;
-      webContents.send(NOTIFICATION_SERVICE_STARTED, credentials.token);
-    } catch (e) {
-      catchException(webContents, e);
+      try {
+        credentials = await initCredential(webContents, storage);
+        await initClient(webContents, credentials, authSecret, ecdh);
+        lastCredential = credentials;
+        webContents.send(NOTIFICATION_SERVICE_STARTED, credentials.token);
+      } catch (e) {
+        catchException(webContents, e);
+      }
     }
-  });
+  );
 }
 
 async function initCredential(webContents, storage) {
@@ -93,13 +99,16 @@ async function initCredential(webContents, storage) {
   const credentialsStringify = registeredCredential;
 
   credentialsStringify.acg.id = credentialsStringify.acg.id.toString();
-  credentialsStringify.acg.securityToken = credentialsStringify.acg.securityToken.toString();
-  storage.set('credentials', credentialsStringify);
-  storage.set('appID', credentialConfig.appID);
+  credentialsStringify.acg.securityToken =
+    credentialsStringify.acg.securityToken.toString();
+  storage.setItem("credentials", credentialsStringify);
+  storage.setItem("appID", credentialConfig.appID);
   webContents.send(TOKEN_UPDATED, registeredCredential.token);
 
   registeredCredential.acg.id = BigInt(registeredCredential.acg.id);
-  registeredCredential.acg.securityToken = BigInt(registeredCredential.acg.securityToken);
+  registeredCredential.acg.securityToken = BigInt(
+    registeredCredential.acg.securityToken
+  );
   return registeredCredential;
 }
 
@@ -118,7 +127,7 @@ async function initClient(webContents, credentials, authSecret, ecdh) {
   });
 
   // Will be called on new notification
-  client.on('message-data', (data) => {
+  client.on("message-data", (data) => {
     // Notify the renderer process that a new notification has been received
     // And check if window is not destroyed for darwin Apps
     if (!webContents.isDestroyed()) {
@@ -131,20 +140,24 @@ async function initClient(webContents, credentials, authSecret, ecdh) {
 
   function calculateThreshold() {
     const timeNow = Date.now();
-    const isExceedThreshold = (timeNow - lastClosedTimeInMills > SOCKET_CLOSED_DELAY_THRESHOLD);
+    const isExceedThreshold =
+      timeNow - lastClosedTimeInMills > SOCKET_CLOSED_DELAY_THRESHOLD;
     lastClosedTimeInMills = timeNow;
     return isExceedThreshold;
   }
 
   // Listen for FCM server connection failure
   // Handling for TCP/TLS socket closed
-  client.getSocket().on('close', () => {
+  client.getSocket().on("close", () => {
     if (calculateThreshold() && !isTryingReconnect) {
       isTryingReconnect = true;
       tryRestart(webContents, authSecret, ecdh);
       isTryingReconnect = false;
     } else {
-      webContents.send(NOTIFICATION_SERVICE_ERROR, 'PUSH_RECEIVER:::Socket closed, But not reconnect since already trying reconnection');
+      webContents.send(
+        NOTIFICATION_SERVICE_ERROR,
+        "PUSH_RECEIVER:::Socket closed, But not reconnect since already trying reconnection"
+      );
     }
   });
 
@@ -153,7 +166,10 @@ async function initClient(webContents, credentials, authSecret, ecdh) {
 }
 
 async function tryRestart(webContents, authSecret, ecdh) {
-  webContents.send(NOTIFICATION_SERVICE_ERROR, 'PUSH_RECEIVER:::Socket closed, Trying to reopen fcm socket');
+  webContents.send(
+    NOTIFICATION_SERVICE_ERROR,
+    "PUSH_RECEIVER:::Socket closed, Trying to reopen fcm socket"
+  );
   if (!webContents.isDestroyed() && lastCredential != null) {
     try {
       // Using previously generated credential for login token consistency
@@ -163,12 +179,15 @@ async function tryRestart(webContents, authSecret, ecdh) {
       catchException(webContents, e);
     }
   } else {
-    webContents.send(NOTIFICATION_SERVICE_ERROR, 'PUSH_RECEIVER:::Socket reopen failed due to webContent or lastCredential instance is not initialized');
+    webContents.send(
+      NOTIFICATION_SERVICE_ERROR,
+      "PUSH_RECEIVER:::Socket reopen failed due to webContent or lastCredential instance is not initialized"
+    );
   }
 }
 
 function catchException(webContents, e) {
-  console.error('PUSH_RECEIVER:::Error while starting the service', e);
+  console.error("PUSH_RECEIVER:::Error while starting the service", e);
   // Forward error to the renderer process
   webContents.send(NOTIFICATION_SERVICE_ERROR, e.message);
 }
